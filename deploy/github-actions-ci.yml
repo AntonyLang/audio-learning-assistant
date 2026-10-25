@@ -1,4 +1,4 @@
-name: ci
+# CI definition, kept out of .github/workflows so the repository can be pushed with a\n# token that has only 'repo' scope. To enable it:\n#   mkdir -p .github/workflows && cp deploy/github-actions-ci.yml .github/workflows/ci.yml\n# (the token must then include the 'workflow' scope).\nname: ci
 
 on:
   push:
