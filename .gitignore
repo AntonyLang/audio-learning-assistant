@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Node
+node_modules/
+apps/web/dist/
+apps/web/.vite/
+pnpm-debug.log*
+
+# Runtime data (content-addressed objects, temp audio jobs)
+_data/
+*.mp3
+*.wav
+!docs/assets/*.mp3
+
+# Local secrets
+.env
+.env.local
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "note": "Executable subset of the document's 40-case plan. Split by article so a question from the validation article is never tuned against.",
+  "cases": [
+    {
+      "id": "A1",
+      "split": "dev",
+      "article": "distributed-idempotency.md",
+      "question": "调用超时为什么不能断定远端没有完成？",
+      "must_explain": ["超时", "未知"],
+      "must_quote": ["超时并不能证明远端操作没有完成"]
+    },
+    {
+      "id": "A2",
+      "split": "dev",
+      "article": "distributed-idempotency.md",
+      "question": "幂等键为什么必须由业务意图决定？",
+      "must_explain": ["幂等键", "重试"],
+      "must_quote": ["幂等键必须由业务意图决定"]
+    },
+    {
+      "id": "A3",
+      "split": "dev",
+      "article": "distributed-idempotency.md",
+      "question": "出现结果未知时第一步应该做什么？",
+      "must_explain": ["回执", "产物"],
+      "must_quote": ["检查持久化的回执"]
+    },
+    {
+      "id": "A4",
+      "split": "dev",
+      "article": "distributed-idempotency.md",
+      "question": "哪些错误可以自动重试，哪些不应该整条重试？",
+      "must_explain": ["限流", "退避"],
+      "must_quote": ["连接失败"]
+    },
+    {
+      "id": "A5",
+      "split": "dev",
+      "article": "distributed-idempotency.md",
+      "question": "租约如何防止旧执行者覆盖新结果？",
+      "must_explain": ["租约", "执行者"],
+      "must_quote": ["租约"]
+    },
+    {
+      "id": "B1",
+      "split": "validation",
+      "article": "rss-delivery.md",
+      "question": "私有 RSS 为什么不能直接写对象存储签名 URL？",
+      "must_explain": ["有效期", "签名"],
+      "must_quote": ["签名 URL 有有效期"]
+    },
+    {
+      "id": "B2",
+      "split": "validation",
+      "article": "rss-delivery.md",
+      "question": "单段 Range 请求应该返回哪些响应头？",
+      "must_explain": ["Content-Range", "206"],
+      "must_quote": ["206"]
+    },
+    {
+      "id": "B3",
+      "split": "validation",
+      "article": "rss-delivery.md",
+      "question": "已发布的音频为什么保持不可变？",
+      "must_explain": ["不可变", "GUID"],
+      "must_quote": ["已发布的音频应当保持不可变"]
+    }
+  ]
+}

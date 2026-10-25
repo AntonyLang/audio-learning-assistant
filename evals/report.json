@@ -1,0 +1,160 @@
+{
+  "generated_at": "2026-10-25T02:29:57.416659+00:00",
+  "config": "C",
+  "summary": {
+    "cases": 8,
+    "errors": 0,
+    "duration_compliance": 1.0,
+    "citation_relocation": 1.0,
+    "evidence_recall": 1.0,
+    "keypoint_coverage": 0.812,
+    "unsupported_claim_rate": 0.0,
+    "claims": 30,
+    "external_evidence_cases": 6,
+    "avg_duration_s": 91.6,
+    "avg_searches": 0.75,
+    "avg_pages": 1.75
+  },
+  "cases": [
+    {
+      "case_id": "A1",
+      "split": "dev",
+      "state": "SUCCEEDED",
+      "duration_ms": 95000,
+      "claims": 4,
+      "claims_supported": 4,
+      "external_evidence": true,
+      "searches": 1,
+      "pages": 3,
+      "error": ""
+    },
+    {
+      "case_id": "A2",
+      "split": "dev",
+      "state": "SUCCEEDED",
+      "duration_ms": 79048,
+      "claims": 3,
+      "claims_supported": 3,
+      "external_evidence": false,
+      "searches": 0,
+      "pages": 0,
+      "error": ""
+    },
+    {
+      "case_id": "A3",
+      "split": "dev",
+      "state": "SUCCEEDED",
+      "duration_ms": 79286,
+      "claims": 3,
+      "claims_supported": 3,
+      "external_evidence": false,
+      "searches": 0,
+      "pages": 0,
+      "error": ""
+    },
+    {
+      "case_id": "A4",
+      "split": "dev",
+      "state": "SUCCEEDED",
+      "duration_ms": 104048,
+      "claims": 4,
+      "claims_supported": 4,
+      "external_evidence": true,
+      "searches": 1,
+      "pages": 2,
+      "error": ""
+    },
+    {
+      "case_id": "A5",
+      "split": "dev",
+      "state": "SUCCEEDED",
+      "duration_ms": 105239,
+      "claims": 4,
+      "claims_supported": 4,
+      "external_evidence": true,
+      "searches": 1,
+      "pages": 2,
+      "error": ""
+    },
+    {
+      "case_id": "B1",
+      "split": "validation",
+      "state": "SUCCEEDED",
+      "duration_ms": 82620,
+      "claims": 4,
+      "claims_supported": 4,
+      "external_evidence": true,
+      "searches": 1,
+      "pages": 3,
+      "error": ""
+    },
+    {
+      "case_id": "B2",
+      "split": "validation",
+      "state": "SUCCEEDED",
+      "duration_ms": 108810,
+      "claims": 4,
+      "claims_supported": 4,
+      "external_evidence": true,
+      "searches": 1,
+      "pages": 2,
+      "error": ""
+    },
+    {
+      "case_id": "B3",
+      "split": "validation",
+      "state": "SUCCEEDED",
+      "duration_ms": 79048,
+      "claims": 4,
+      "claims_supported": 4,
+      "external_evidence": true,
+      "searches": 1,
+      "pages": 2,
+      "error": ""
+    }
+  ],
+  "ablations": {
+    "C": {
+      "cases": 5,
+      "errors": 0,
+      "duration_compliance": 1.0,
+      "citation_relocation": 1.0,
+      "evidence_recall": 1.0,
+      "keypoint_coverage": 0.9,
+      "unsupported_claim_rate": 0.0,
+      "claims": 18,
+      "external_evidence_cases": 3,
+      "avg_duration_s": 92.5,
+      "avg_searches": 0.6,
+      "avg_pages": 1.4
+    },
+    "A": {
+      "cases": 5,
+      "errors": 0,
+      "duration_compliance": 1.0,
+      "citation_relocation": 1.0,
+      "evidence_recall": 1.0,
+      "keypoint_coverage": 0.9,
+      "unsupported_claim_rate": 0.0,
+      "claims": 18,
+      "external_evidence_cases": 0,
+      "avg_duration_s": 90.8,
+      "avg_searches": 0.0,
+      "avg_pages": 0.0
+    },
+    "B": {
+      "cases": 5,
+      "errors": 0,
+      "duration_compliance": 1.0,
+      "citation_relocation": 1.0,
+      "evidence_recall": 1.0,
+      "keypoint_coverage": 0.9,
+      "unsupported_claim_rate": 0.0,
+      "claims": 18,
+      "external_evidence_cases": 3,
+      "avg_duration_s": 92.5,
+      "avg_searches": 0.6,
+      "avg_pages": 1.4
+    }
+  }
+}
