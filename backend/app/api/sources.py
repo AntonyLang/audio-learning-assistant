@@ -21,7 +21,6 @@ from app.models import (
     IndexState,
     Quality,
     RunKind,
-    RunState,
     Source,
     SourceKind,
     SourceVersion,
@@ -270,4 +269,3 @@ def _source_card(source: Source, version: SourceVersion | None) -> dict:
     }
 
 
-_ = RunState  # documented state machine reference

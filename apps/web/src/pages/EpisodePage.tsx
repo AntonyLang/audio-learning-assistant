@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api";
+import Player from "../components/Player";
 import type { EpisodeDetail } from "../types";
 
 interface Props {
@@ -79,7 +80,11 @@ export default function EpisodePage({ id, onBack }: Props) {
 
       {episode.audio?.web_url && episode.published && (
         <section className="card">
-          <audio controls preload="metadata" src={episode.audio.web_url} style={{ width: "100%" }} />
+          <Player
+            episodeId={episode.episode_id}
+            src={episode.audio.web_url}
+            durationMs={episode.duration_ms}
+          />
           <div className="muted small">
             字节 SHA-256 {episode.audio.sha256?.slice(0, 16)}… · 单条上限 300 秒
           </div>

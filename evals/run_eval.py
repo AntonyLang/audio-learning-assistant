@@ -18,18 +18,16 @@ import asyncio
 import json
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
-from sqlalchemy import select  # noqa: E402
-
-from app.api.auth import demo_prefs  # noqa: E402
-from app.config import get_settings  # noqa: E402
-from app.db import SessionFactory, dispose_engine  # noqa: E402
-from app.models import (  # noqa: E402
+from app.api.auth import demo_prefs
+from app.config import get_settings
+from app.db import SessionFactory, dispose_engine
+from app.models import (
     Episode,
     EpisodeRevision,
     GenerationRun,
@@ -39,12 +37,13 @@ from app.models import (  # noqa: E402
     StageArtifact,
     UserProfile,
 )
-from app.pipeline.runner import execute_run  # noqa: E402
-from app.schemas.content import EvidencePack, ScriptDoc  # noqa: E402
-from app.security import hash_password  # noqa: E402
-from app.services import devtools, episode_service, runs  # noqa: E402
-from app.services.ingest import EXTRACTOR_VERSION  # noqa: E402
-from app.services.validation import validate_evidence_pack  # noqa: E402
+from app.pipeline.runner import execute_run
+from app.schemas.content import EvidencePack, ScriptDoc
+from app.security import hash_password
+from app.services import devtools, episode_service, runs
+from app.services.ingest import EXTRACTOR_VERSION
+from app.services.validation import validate_evidence_pack
+from sqlalchemy import select
 
 EVAL_EMAIL = "eval@local"
 ARTICLES = ROOT / "evals" / "fixtures" / "articles"
@@ -309,7 +308,7 @@ def render_report(
     lines: list[str] = []
     lines.append("# 评测报告：个人音频学习助手")
     lines.append("")
-    lines.append(f"- 生成时间：{datetime.now(timezone.utc).astimezone().isoformat(timespec='seconds')}")
+    lines.append(f"- 生成时间：{datetime.now(UTC).astimezone().isoformat(timespec='seconds')}")
     lines.append(f"- 适配器：`{settings.provider_mode}`（确定性本地适配器）")
     lines.append(
         f"- 时长门禁：单条 ≤ {settings.max_episode_ms} ms；预算：每天 {settings.daily_budget_ms} ms"
@@ -453,7 +452,7 @@ async def main() -> int:
     REPORT_JSON.write_text(
         json.dumps(
             {
-                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "generated_at": datetime.now(UTC).isoformat(),
                 "config": "C",
                 "summary": full_summary,
                 "cases": [

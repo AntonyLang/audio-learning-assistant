@@ -14,7 +14,8 @@ dist/
 node_modules/
 apps/web/dist/
 apps/web/.vite/
-pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
 
 # Runtime data (content-addressed objects, temp audio jobs)
 _data/

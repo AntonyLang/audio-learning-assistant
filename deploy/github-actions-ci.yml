@@ -41,7 +41,7 @@ jobs:
           pip install -e ".[dev]"
       - name: Lint
         working-directory: backend
-        run: ruff check app tests ../../evals 2>/dev/null || ruff check app tests
+        run: ruff check app tests
       - name: Tests
         working-directory: backend
         run: pytest -q
@@ -50,17 +50,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: apps/web/pnpm-lock.yaml
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
       - name: Install
         working-directory: apps/web
-        run: pnpm install --frozen-lockfile
+        run: npm ci --no-audit --no-fund
       - name: Build
         working-directory: apps/web
-        run: pnpm build
+        run: npm run build

@@ -13,7 +13,7 @@ from app.api.deps import current_user
 from app.config import Settings, get_settings
 from app.db import get_session
 from app.models import Session, UserProfile
-from app.security import hash_password, hash_token, new_token, verify_password
+from app.security import constant_time_equals, hash_password, hash_token, new_token, verify_password
 
 router = APIRouter(tags=["auth"])
 
@@ -87,6 +87,10 @@ async def logout(
         row = await session.execute(select(Session).where(Session.token_hash == hash_token(token)))
         existing = row.scalar_one_or_none()
         if existing is not None and existing.revoked_at is None:
+            # Logout is state-changing; a live session must present its CSRF token.
+            header = request.headers.get("x-csrf-token", "")
+            if not header or not constant_time_equals(header, existing.csrf_token):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="csrf_failed")
             existing.revoked_at = datetime.now(UTC)
             await session.commit()
     response.delete_cookie(settings.session_cookie, path="/")

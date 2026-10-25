@@ -59,7 +59,7 @@ uvicorn app.main:app --reload
 
 # 3) 前端
 cd ../apps/web
-pnpm install && pnpm dev        # http://127.0.0.1:5173，代理到 8000
+npm install && npm run dev      # http://127.0.0.1:5173，代理到 8000
 ```
 
 本地没有 Redis / worker 时，把 `.env` 里的 `INLINE_WORKER=true`，API 会在进程内执行已提交的任务。
@@ -70,6 +70,13 @@ pnpm install && pnpm dev        # http://127.0.0.1:5173，代理到 8000
 python scripts/demo_offline.py
 # [1/4] ingest → [2/4] generate → [3/4] publish
 # 输出实测时长、预算用量、音频对象键与 SHA-256、RSS 入口
+```
+
+对**正在运行的部署**做一次完整冒烟（登录 → 投递 → 生成 → 发布 → 详情 → RSS → Range → 网页）：
+
+```bash
+python scripts/smoke_http.py                       # 默认 http://127.0.0.1:8000 与 :8080
+python scripts/smoke_http.py http://127.0.0.1:8000 http://127.0.0.1:8080
 ```
 
 ### 测试与评测

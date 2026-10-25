@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -20,10 +19,7 @@ from app.models import (
     EpisodeRevision,
     FeedbackEvent,
     FeedbackKind,
-    GenerationRun,
-    PlanItem,
     Quality,
-    RevisionStatus,
     Source,
     SourceVersion,
     StageArtifact,
@@ -335,4 +331,3 @@ async def _evidence_cards(session: AsyncSession, claims: list[dict]) -> list[dic
     return list(refs.values())
 
 
-_ = (PlanItem, GenerationRun, RevisionStatus, datetime, timezone)

@@ -24,11 +24,24 @@ services:
       retries: 20
     networks: [internal]
 
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: alembic upgrade head
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://ala:ala@db:5432/ala
+    depends_on:
+      db: {condition: service_healthy}
+    restart: "no"
+    networks: [internal]
+
   api:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     env_file: [.env]
     environment:
       DATABASE_URL: postgresql+asyncpg://ala:ala@db:5432/ala
@@ -36,9 +49,12 @@ services:
       OFFLINE_FIXTURES_DIR: /app/evals/fixtures/web
       STORAGE_DIR: /data/objects
       WORK_DIR: /data/work
+      # A real dispatcher and worker exist in this topology; do not also run inline.
+      INLINE_WORKER: "false"
     volumes:
       - objects:/data
     depends_on:
+      migrate: {condition: service_completed_successfully}
       db: {condition: service_healthy}
       redis: {condition: service_healthy}
     ports: ["8000:8000"]
@@ -60,6 +76,7 @@ services:
     volumes:
       - objects:/data
     depends_on:
+      migrate: {condition: service_completed_successfully}
       db: {condition: service_healthy}
       redis: {condition: service_healthy}
     networks: [internal]
@@ -74,6 +91,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://ala:ala@db:5432/ala
       REDIS_URL: redis://redis:6379/0
     depends_on:
+      migrate: {condition: service_completed_successfully}
       db: {condition: service_healthy}
       redis: {condition: service_healthy}
     networks: [internal]
@@ -89,6 +107,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       OFFLINE_FIXTURES_DIR: /app/evals/fixtures/web
     depends_on:
+      migrate: {condition: service_completed_successfully}
       db: {condition: service_healthy}
       redis: {condition: service_healthy}
     networks: [internal]
