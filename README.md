@@ -82,6 +82,10 @@ python evals/run_eval.py --ablations    # 生成 evals/report.md（8 个用例 +
 `pytest` 需要可用的 `pgvector` 数据库（默认 `postgresql+asyncpg://ala:ala@localhost:55432/ala_test`，
 可用 `TEST_DATABASE_URL` 覆盖）以及 `ffmpeg`/`ffprobe` 在 PATH 中。
 
+CI 定义在 [`deploy/github-actions-ci.yml`](deploy/github-actions-ci.yml)（同样的 ruff + pytest + 前端构建）。
+它没有放在 `.github/workflows/` 下，是因为推送环境的 OAuth token 缺少 `workflow` 权限；
+把它复制到 `.github/workflows/ci.yml` 并给 token 加上 `workflow` scope 即可启用。
+
 ## 实测结果（确定性离线适配器）
 
 来自 `evals/report.md`，可用同一条命令复现：
