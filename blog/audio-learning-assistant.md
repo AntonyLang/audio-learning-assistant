@@ -1,6 +1,6 @@
 # 让 AI 播客可以被核对：一个「有来源、有时长门禁」的个人音频学习助手
 
-> 项目：`audio-learning-assistant` · 51 个测试 · 8 个评测用例 · 全链路离线可复现
+> 仓库：https://github.com/AntonyLang/audio-learning-assistant · 51 个测试 · 8 个评测用例 · 全链路离线可复现
 > 关键词：FastAPI、LangGraph、PostgreSQL + pgvector、Celery、ffprobe、证据溯源、SSE、私有 RSS
 
 ## 一、问题不是"生成音频"，而是"生成一段可以被核对的讲解"
@@ -177,7 +177,7 @@ SSE 断线重放、私有 RSS 与媒体 Range、网页播放器与反馈闭环�
 ## 七、复现
 
 ```bash
-git clone <repo> && cd audio-learning-assistant
+git clone https://github.com/AntonyLang/audio-learning-assistant && cd audio-learning-assistant
 cp .env.example .env
 docker compose up --build          # http://127.0.0.1:8080，demo@local / demo12345
 
