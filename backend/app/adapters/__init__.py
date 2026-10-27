@@ -85,20 +85,26 @@ def build_adapters(settings: Settings, *, fixtures_dir: Path | None = None) -> A
         for name, value in (
             ("LLM_API_KEY", settings.llm_api_key),
             ("EMBEDDING_API_KEY", settings.embedding_api_key),
-            ("TTS_API_KEY", settings.tts_api_key),
+            ("TTS_API_KEY", settings.tts_api_key if settings.tts_provider == "dashscope" else "local-or-configured"),
         )
         if not value
     ]
     if missing:
         raise AdapterError("provider_config_incomplete", ",".join(missing))
 
-    from app.adapters.cloud import DashScopeEmbedding, DashScopeLLM, DashScopeTTS, TavilySearch
+    from app.adapters.cloud import (
+        DashScopeEmbedding,
+        DashScopeLLM,
+        DashScopeTTS,
+        SpeechAPI,
+        TavilySearch,
+    )
 
     return Adapters(
         llm=DashScopeLLM(settings),
         embedding=DashScopeEmbedding(settings),
         search=TavilySearch(settings),
-        tts=DashScopeTTS(settings),
+        tts=DashScopeTTS(settings) if settings.tts_provider == "dashscope" else SpeechAPI(settings),
         storage=storage,
         mode="cloud",
     )

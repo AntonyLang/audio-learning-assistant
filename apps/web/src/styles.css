@@ -74,7 +74,7 @@ nav button { text-align: left; border-color: transparent; background: transparen
 nav button.active { background: var(--panel); border-color: var(--line); color: var(--accent); }
 .sidebar-foot { margin-top: auto; display: grid; gap: 6px; }
 
-.main { padding: 28px 34px 60px; max-width: 1080px; }
+.main { padding: 28px 34px 120px; max-width: 1080px; min-width: 0; width: 100%; }
 .page { display: grid; gap: 18px; }
 .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .muted { color: var(--muted); }
@@ -105,7 +105,7 @@ nav button.active { background: var(--panel); border-color: var(--line); color: 
   background: var(--panel); border: 1px solid var(--line);
   border-radius: 12px; padding: 14px 16px;
 }
-.row-main { flex: 1; }
+.row-main { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .row-title { font-weight: 600; margin-bottom: 4px; }
 .row-index { color: var(--muted); font-variant-numeric: tabular-nums; }
 .row-actions { margin-left: auto; }
@@ -160,7 +160,7 @@ blockquote {
 .inline input { width: 120px; }
 
 .player { position: fixed; bottom: 0; left: 248px; right: 0; display: flex; gap: 16px; align-items: center; padding: 12px 24px; background: rgba(13, 17, 23, 0.95); border-top: 1px solid var(--line); }
-.player audio { flex: 1; }
+.player audio { flex: 1; min-width: 0; width: 100%; }
 .player-meta { display: grid; gap: 2px; }
 
 .login { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
@@ -169,8 +169,16 @@ blockquote {
 
 @media (max-width: 860px) {
   .shell { grid-template-columns: 1fr; }
-  .sidebar { flex-direction: row; align-items: center; border-right: none; border-bottom: 1px solid var(--line); overflow-x: auto; }
-  .sidebar-foot { margin: 0 0 0 auto; }
-  .main { padding: 20px 16px 80px; }
-  .player { left: 0; }
+  .sidebar { flex-direction: column; align-items: stretch; border-right: none; border-bottom: 1px solid var(--line); gap: 14px; padding: 16px; }
+  nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  nav button { text-align: center; padding: 10px 4px; }
+  .sidebar-foot { margin: 0; display: flex; justify-content: space-between; }
+  .main { padding: 20px 16px 150px; }
+  .player { left: 0; flex-direction: column; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); gap: 8px; }
+  .player-meta { display: flex; justify-content: space-between; width: 100%; }
+  .budget-legend { flex-wrap: wrap; gap: 8px 14px; }
+  .row { flex-wrap: wrap; gap: 10px; }
+  .token-box { flex-wrap: wrap; }
+  .token-box code { overflow-wrap: anywhere; min-width: 0; }
+  input, textarea { font-size: 16px; }
 }

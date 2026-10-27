@@ -3,3 +3,8 @@ dist
 .venv
 __pycache__
 _data
+.git
+.env
+.env.local
+.env.production
+deploy/.private

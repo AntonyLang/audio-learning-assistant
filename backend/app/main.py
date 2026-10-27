@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import auth, episodes, feeds, playback, sources, today
@@ -16,6 +16,8 @@ from app.jobs.dispatch import get_dispatcher
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("app")
+logging.getLogger("httpx").setLevel(logging.WARNING)
+settings = get_settings()
 
 
 @asynccontextmanager
@@ -39,15 +41,27 @@ app = FastAPI(
     version="0.1.0",
     description="Turn a reading list into sourced, duration-bounded Chinese micro-lessons.",
     lifespan=lifespan,
+    docs_url=None if settings.app_env == "production" else "/docs",
+    redoc_url=None if settings.app_env == "production" else "/redoc",
+    openapi_url=None if settings.app_env == "production" else "/openapi.json",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[settings.public_base_url.rstrip("/")] if settings.app_env == "production" else ["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def private_responses(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/v1/"):
+        response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
 
 app.include_router(auth.router)
 app.include_router(sources.router)

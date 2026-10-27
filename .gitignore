@@ -26,6 +26,8 @@ _data/
 # Local secrets
 .env
 .env.local
+.env.production
+deploy/.private/
 
 # Editors / OS
 .vscode/

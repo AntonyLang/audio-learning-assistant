@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user
@@ -19,8 +19,13 @@ router = APIRouter(tags=["auth"])
 
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=256)
+
+
+class PasswordChange(BaseModel):
+    current_password: str = Field(max_length=256)
+    new_password: str = Field(min_length=16, max_length=256)
 
 
 class LoginResponse(BaseModel):
@@ -41,10 +46,15 @@ class ProfilePatch(BaseModel):
 @router.post("/v1/session", response_model=LoginResponse)
 async def login(
     body: LoginRequest,
+    request: Request,
     response: Response,
     session: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
 ) -> LoginResponse:
+    if settings.app_env == "production" and request.headers.get("origin") not in (
+        None, settings.public_base_url.rstrip("/")
+    ):
+        raise HTTPException(status_code=403, detail="origin_rejected")
     row = await session.execute(select(UserProfile).where(UserProfile.email == body.email.lower()))
     profile = row.scalar_one_or_none()
     if profile is None or not verify_password(body.password, profile.password_hash):
@@ -99,7 +109,7 @@ async def logout(
 
 
 @router.get("/v1/profile")
-async def get_profile(owner: UserProfile = Depends(current_user)) -> dict:
+async def get_profile(request: Request, owner: UserProfile = Depends(current_user)) -> dict:
     return {
         "owner_id": str(owner.id),
         "email": owner.email,
@@ -107,7 +117,29 @@ async def get_profile(owner: UserProfile = Depends(current_user)) -> dict:
         "timezone": owner.timezone,
         "prefs": owner.prefs,
         "prefs_version": owner.prefs_version,
+        "csrf_token": request.state.auth_session.csrf_token,
     }
+
+
+@router.put("/v1/password", status_code=204)
+async def change_password(
+    body: PasswordChange,
+    request: Request,
+    owner: UserProfile = Depends(current_user),
+    session: AsyncSession = Depends(get_session),
+) -> Response:
+    if not verify_password(body.current_password, owner.password_hash):
+        raise HTTPException(status_code=400, detail="current_password_incorrect")
+    owner.password_hash = hash_password(body.new_password)
+    await session.execute(
+        update(Session).where(
+            Session.owner_id == owner.id,
+            Session.id != request.state.auth_session.id,
+            Session.revoked_at.is_(None),
+        ).values(revoked_at=datetime.now(UTC))
+    )
+    await session.commit()
+    return Response(status_code=204)
 
 
 @router.patch("/v1/profile")
@@ -149,17 +181,18 @@ def demo_prefs(settings: Settings) -> dict:
 
 
 async def ensure_demo_user(session: AsyncSession, settings: Settings) -> UserProfile | None:
-    if not settings.seed_demo_user:
+    bootstrap = bool(settings.bootstrap_email and settings.bootstrap_password)
+    if not bootstrap and not settings.seed_demo_user:
         return None
-    email = settings.demo_email.lower()
+    email = (settings.bootstrap_email if bootstrap else settings.demo_email).lower()
     row = await session.execute(select(UserProfile).where(UserProfile.email == email))
     profile = row.scalar_one_or_none()
     if profile is not None:
         return profile
     profile = UserProfile(
         email=email,
-        password_hash=hash_password(settings.demo_password),
-        display_name="Demo",
+        password_hash=hash_password(settings.bootstrap_password if bootstrap else settings.demo_password),
+        display_name="个人学习空间" if bootstrap else "Demo",
         timezone=settings.app_timezone,
         prefs=demo_prefs(settings),
         prefs_version=1,

@@ -17,7 +17,9 @@ from app.adapters.base import (
     SearchResult,
     TTSResult,
     Usage,
+    new_request_id,
 )
+from app.adapters.prompts import system_prompt
 from app.config import Settings
 from app.services.textproc import estimate_tokens
 
@@ -32,7 +34,7 @@ class DashScopeLLM:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.info = ModelInfo(
-            provider="dashscope",
+            provider=settings.llm_provider,
             model=settings.llm_model,
             kind="llm",
             params={"json_mode": True, "temperature": 0.0},
@@ -45,7 +47,7 @@ class DashScopeLLM:
         body = {
             "model": self.settings.llm_model,
             "messages": [
-                {"role": "system", "content": system or "你是一个严谨的中文技术讲解作者。"},
+                {"role": "system", "content": system or system_prompt(task)},
                 {
                     "role": "user",
                     "content": f"任务：{task}\n只输出 JSON 对象。\n输入数据：\n"
@@ -56,6 +58,11 @@ class DashScopeLLM:
             "temperature": 0.0,
             "max_tokens": max_output_tokens or self.settings.llm_output_token_cap,
         }
+        if self.settings.llm_thinking == "disabled":
+            if self.settings.llm_provider in {"dashscope", "siliconflow"}:
+                body["enable_thinking"] = False
+            elif self.settings.llm_provider in {"mimo", "volcengine"}:
+                body["thinking"] = {"type": "disabled"}
         headers = {"Authorization": f"Bearer {self.settings.llm_api_key}"}
         try:
             async with _client() as client:
@@ -67,6 +74,8 @@ class DashScopeLLM:
         if response.status_code >= 400:
             raise AdapterError("llm_request_failed", response.text[:400])
         data = response.json()
+        if data["choices"][0].get("finish_reason") == "length":
+            raise AdapterError("llm_output_truncated", "increase LLM_OUTPUT_TOKEN_CAP")
         content = data["choices"][0]["message"]["content"]
         parsed = _loads_json(content)
         usage = data.get("usage", {})
@@ -116,7 +125,7 @@ class DashScopeEmbedding:
             if response.status_code >= 400:
                 raise AdapterError("embedding_request_failed", response.text[:400])
             payload = response.json()
-            out.extend([row["embedding"] for row in payload["data"]])
+            out.extend([row["embedding"] for row in sorted(payload["data"], key=lambda row: row["index"])])
         for vector in out:
             if len(vector) != self.settings.embedding_dim:
                 raise AdapterError(
@@ -188,12 +197,50 @@ class DashScopeTTS:
         return audio_response.content
 
 
+class SpeechAPI:
+    """WAV speech endpoint used by the private CPU TTS service and compatible APIs."""
+
+    def __init__(self, settings: Settings) -> None:
+        self.settings = settings
+        self.info = ModelInfo(provider="speech-api", model=settings.tts_model, kind="tts",
+                              params={"voice": settings.tts_voice})
+
+    async def synthesize(self, text: str, voice: str, language: str) -> TTSResult:
+        headers = {"Authorization": f"Bearer {self.settings.tts_api_key}"} if self.settings.tts_api_key else {}
+        body = {"model": self.settings.tts_model, "input": text, "voice": voice, "response_format": "wav"}
+        if self.settings.tts_provider == "qwen-native":
+            body.update(language=language, temperature=0.9, top_k=50, top_p=1.0, rep_penalty=1.05, seed=42)
+        try:
+            async with _client(self.settings.tts_timeout_seconds) as client:
+                response = await client.post(
+                    f"{self.settings.tts_base_url.rstrip('/')}/audio/speech",
+                    headers=headers,
+                    json=body,
+                )
+        except httpx.TimeoutException as exc:
+            raise ProviderTimeout("speech-api") from exc
+        if response.status_code >= 400:
+            raise AdapterError("tts_request_failed", f"HTTP {response.status_code}",
+                               retryable=response.status_code == 429 or response.status_code >= 500)
+        return TTSResult(provider_request_id=new_request_id("speech"), audio=response.content,
+                         expires_at=None, usage=Usage(characters=len(text)), model=self.info,
+                         content_type="audio/wav")
+
+    async def download(self, result: TTSResult) -> bytes:
+        return result.audio
+
+    async def download_url(self, url: str) -> bytes:
+        raise AdapterError("speech_has_no_download_url")
+
+
 class TavilySearch:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.info = ModelInfo(provider="tavily", model="basic", kind="search")
 
     async def search(self, query: str, *, max_results: int = 3) -> list[SearchResult]:
+        if not self.settings.tavily_api_key:
+            raise AdapterError("search_not_configured", "仅依据用户提交的材料生成")
         body: dict = {
             "api_key": self.settings.tavily_api_key,
             "query": query,
@@ -202,8 +249,6 @@ class TavilySearch:
             "include_answer": False,
             "include_raw_content": False,
         }
-        if self.settings.llm_model and False:  # include_domains branch kept explicit
-            body["include_domains_mode"] = "restrict"
         try:
             async with _client(30.0) as client:
                 response = await client.post("https://api.tavily.com/search", json=body)

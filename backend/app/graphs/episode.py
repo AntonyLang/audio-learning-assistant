@@ -59,10 +59,10 @@ from app.services.validation import (
     validate_script_structure,
 )
 
-FOCUS_PROMPT_VERSION = "focus-v1"
-GAP_PROMPT_VERSION = "gap-v1"
-DRAFT_PROMPT_VERSION = "draft-v1"
-VERIFY_PROMPT_VERSION = "verify-v1"
+FOCUS_PROMPT_VERSION = "focus-v2"
+GAP_PROMPT_VERSION = "gap-v2"
+DRAFT_PROMPT_VERSION = "draft-v2"
+VERIFY_PROMPT_VERSION = "verify-v2"
 
 
 class EpisodeState(TypedDict, total=False):
@@ -277,6 +277,9 @@ def build_graph(runtime: EpisodeRuntime):
         plan = GapPlan.model_validate(response.data)
         unresolved = list(state.get("unresolved", []))
         gaps = [g.model_dump() for g in plan.gaps]
+        if gaps and settings.provider_mode == "cloud" and not settings.tavily_api_key:
+            unresolved.extend({"kind": "gap", "reason": "search_not_configured", "question": gap["question"]} for gap in gaps)
+            gaps = []
         if gaps and not await budget.can_consume(runtime.run_id, budget.KEY_SEARCHES):
             unresolved.append(
                 {"kind": "gap", "reason": "search_budget_exhausted", "question": gaps[0]["question"]}
@@ -482,6 +485,10 @@ def build_graph(runtime: EpisodeRuntime):
             "prompt_version": DRAFT_PROMPT_VERSION,
             "fact_revision": int(state.get("fact_revisions", 0)),
         }
+        if state.get("fact_revisions") and state.get("script_artifact_id"):
+            previous = await runtime.load_script(uuid.UUID(state["script_artifact_id"]))
+            payload["previous_script"] = previous.model_dump(mode="json")
+            payload["review_feedback"] = state.get("review", {})
         reserved = await runtime._reserve(estimate_tokens(str(payload)))
         response = await adapters.llm.complete_json(task="draft", payload=payload)
         await runtime._settle(reserved, response.usage)
@@ -564,10 +571,11 @@ def build_graph(runtime: EpisodeRuntime):
         )
         fact_revisions = int(state.get("fact_revisions", 0))
         if critical_ok:
-            return {"review": {"verdicts": len(verdicts), "blocking": []}, "route": "done"}
+            reviewed_id = await runtime.persist_script(updated, fact_revisions)
+            return {"script_artifact_id": str(reviewed_id), "review": {"verdicts": len(verdicts), "blocking": []}, "route": "done"}
         if fact_revisions < settings.max_fact_revisions and structural == []:
             return {
-                "review": {"blocking": blocking},
+                "review": {"blocking": blocking, "verdicts": [v.model_dump(mode="json") for v in verdicts]},
                 "route": "revise",
                 "unresolved": [
                     *state.get("unresolved", []),

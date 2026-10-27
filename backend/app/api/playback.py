@@ -8,6 +8,7 @@ downloads recorded elsewhere are never turned into completion claims.
 from __future__ import annotations
 
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -17,7 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import current_user
 from app.db import get_session
-from app.models import Episode, PlaybackEvent, UserProfile
+from app.models import Episode, EpisodeRevision, PlaybackEvent, UserProfile
 
 router = APIRouter(tags=["playback"])
 
@@ -26,7 +27,7 @@ class PlaybackIn(BaseModel):
     episode_id: uuid.UUID
     session_id: str = Field(min_length=4, max_length=80)
     client_seq: int = Field(ge=0)
-    kind: str = Field(default="progress", max_length=24)
+    kind: Literal["progress", "position"] = "progress"
     start_ms: int = Field(ge=0)
     end_ms: int = Field(ge=0)
 
@@ -42,8 +43,12 @@ async def record_playback(
         raise HTTPException(status_code=404, detail="episode_not_found")
     if body.end_ms < body.start_ms:
         raise HTTPException(status_code=422, detail="invalid_interval")
-    session.add(
-        PlaybackEvent(
+    revision = await session.get(EpisodeRevision, episode.published_revision_id) if episode.published_revision_id else None
+    if revision is None or body.end_ms > (revision.duration_ms or 0) + 1000:
+        raise HTTPException(status_code=422, detail="playback_out_of_range")
+    try:
+        async with session.begin_nested():
+            session.add(PlaybackEvent(
             owner_id=owner.id,
             episode_id=body.episode_id,
             session_id=body.session_id,
@@ -51,10 +56,7 @@ async def record_playback(
             kind=body.kind,
             start_ms=body.start_ms,
             end_ms=body.end_ms,
-        )
-    )
-    try:
-        async with session.begin_nested():
+            ))
             await session.flush()
     except IntegrityError:
         return {"status": "duplicate"}
@@ -74,6 +76,9 @@ async def playback_summary(
     rows = await session.execute(
         select(PlaybackEvent.start_ms, PlaybackEvent.end_ms).where(
             PlaybackEvent.episode_id == episode_id
+        ).where(
+            PlaybackEvent.owner_id == owner.id,
+            PlaybackEvent.kind == "progress",
         )
     )
     intervals = sorted((int(start), int(end)) for start, end in rows.all())
@@ -84,4 +89,10 @@ async def playback_summary(
         else:
             merged.append([start, end])
     listened = sum(end - start for start, end in merged)
-    return {"merged_intervals": merged, "listened_ms": listened}
+    latest = await session.scalar(
+        select(PlaybackEvent.end_ms).where(
+            PlaybackEvent.episode_id == episode_id,
+            PlaybackEvent.owner_id == owner.id,
+        ).order_by(PlaybackEvent.created_at.desc(), PlaybackEvent.client_seq.desc()).limit(1)
+    )
+    return {"merged_intervals": merged, "listened_ms": listened, "position_ms": latest or 0}

@@ -13,6 +13,7 @@ import pgvector.sqlalchemy
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
+
 revision: str = 'ba660c4cc0e3'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None

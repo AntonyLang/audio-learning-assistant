@@ -43,7 +43,8 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     return undefined as T;
   }
   const text = await response.text();
-  const payload = text ? JSON.parse(text) : null;
+  const payload = text && response.headers.get("content-type")?.includes("application/json")
+    ? JSON.parse(text) : null;
   if (!response.ok) {
     const detail = payload?.detail ?? response.statusText;
     throw new ApiError(response.status, typeof detail === "string" ? detail : JSON.stringify(detail));
@@ -67,14 +68,20 @@ export const api = {
       clearCsrf();
     }
   },
-  profile: () =>
-    request<{
+  profile: async () => {
+    const profile = await request<{
       owner_id: string;
       email: string;
       timezone: string;
       prefs: Record<string, unknown>;
       prefs_version: number;
-    }>("/v1/profile"),
+      csrf_token: string;
+    }>("/v1/profile");
+    setCsrf(profile.csrf_token);
+    return profile;
+  },
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<void>("/v1/password", { method: "PUT", body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }) }),
   patchProfile: (body: Record<string, unknown>) =>
     request<Record<string, unknown>>("/v1/profile", { method: "PATCH", body: JSON.stringify(body) }),
   sources: () => request<{ items: SourceCard[] }>("/v1/sources"),
@@ -138,14 +145,16 @@ export const api = {
     request<{ ok: boolean; provider_mode: string; max_episode_ms: number; inline_worker: boolean }>(
       "/healthz",
     ),
-  playback: (episodeId: string, sessionId: string, clientSeq: number, startMs: number, endMs: number) =>
+  playbackSummary: (id: string) => request<{ merged_intervals: number[][]; listened_ms: number; position_ms: number }>(`/v1/episodes/${id}/playback`),
+  playback: (episodeId: string, sessionId: string, clientSeq: number, startMs: number, endMs: number, kind = "progress") =>
     request<Record<string, unknown>>("/v1/playback-events", {
       method: "POST",
+      keepalive: true,
       body: JSON.stringify({
         episode_id: episodeId,
         session_id: sessionId,
         client_seq: clientSeq,
-        kind: "progress",
+        kind,
         start_ms: startMs,
         end_ms: endMs,
       }),

@@ -18,9 +18,21 @@ interface Profile {
   prefs: Record<string, unknown>;
 }
 
+function routeFromHash(): Route {
+  const match = location.hash.match(/^#\/episode\/([a-f0-9-]{36})$/i);
+  if (match) return { name: "episode", id: match[1] };
+  if (location.hash === "#/inbox") return { name: "inbox" };
+  if (location.hash === "#/settings") return { name: "settings" };
+  return { name: "today" };
+}
+
+function navigate(route: Route) {
+  location.hash = route.name === "episode" ? `/episode/${route.id}` : `/${route.name}`;
+}
+
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [route, setRoute] = useState<Route>({ name: "today" });
+  const [route, setRoute] = useState<Route>(routeFromHash);
   const [booting, setBooting] = useState(true);
   const [health, setHealth] = useState<{ provider_mode: string; inline_worker: boolean } | null>(
     null,
@@ -38,6 +50,12 @@ export default function App() {
     } finally {
       setBooting(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const onHash = () => setRoute(routeFromHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
   useEffect(() => {
@@ -79,19 +97,19 @@ export default function App() {
         <nav>
           <button
             className={route.name === "today" ? "active" : ""}
-            onClick={() => setRoute({ name: "today" })}
+            onClick={() => navigate({ name: "today" })}
           >
             今日收听
           </button>
           <button
             className={route.name === "inbox" ? "active" : ""}
-            onClick={() => setRoute({ name: "inbox" })}
+            onClick={() => navigate({ name: "inbox" })}
           >
             收件箱
           </button>
           <button
             className={route.name === "settings" ? "active" : ""}
-            onClick={() => setRoute({ name: "settings" })}
+            onClick={() => navigate({ name: "settings" })}
           >
             设置与订阅
           </button>
@@ -100,7 +118,7 @@ export default function App() {
           <div className="muted small">{profile.email}</div>
           {health && (
             <div className="muted small">
-              适配器 {health.provider_mode} · {health.inline_worker ? "内联执行" : "Celery"}
+              {health.provider_mode === "fake" ? "演示模式" : "个人学习空间"}
             </div>
           )}
           <button className="link" onClick={() => void onLogout()}>
@@ -110,14 +128,14 @@ export default function App() {
       </aside>
       <main className="main">
         {route.name === "today" && (
-          <TodayPage onOpenEpisode={(id) => setRoute({ name: "episode", id })} />
+          <TodayPage onOpenEpisode={(id) => navigate({ name: "episode", id })} />
         )}
         {route.name === "inbox" && (
-          <Inbox onOpenEpisode={(id) => setRoute({ name: "episode", id })} />
+          <Inbox onOpenEpisode={(id) => navigate({ name: "episode", id })} />
         )}
         {route.name === "settings" && <SettingsPage />}
         {route.name === "episode" && (
-          <EpisodePage id={route.id} onBack={() => setRoute({ name: "today" })} />
+          <EpisodePage key={route.id} id={route.id} onBack={() => navigate({ name: "today" })} />
         )}
       </main>
     </div>

@@ -1,0 +1,20 @@
+{
+    admin off
+    servers {
+        protocols h1 h2
+    }
+}
+
+https://{$PUBLIC_HOST} {
+    tls {
+        issuer acme {
+            dir https://acme-v02.api.letsencrypt.org/directory
+            profile shortlived
+        }
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000"
+        -Server
+    }
+    reverse_proxy 127.0.0.1:8091
+}

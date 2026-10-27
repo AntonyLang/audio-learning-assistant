@@ -9,15 +9,16 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
+    model_config = SettingsConfigDict(env_file=("../.env", ".env", "../.env.local", ".env.local"), extra="ignore")
 
     # --- deployment -------------------------------------------------------
     app_env: str = "dev"
@@ -32,15 +33,20 @@ class Settings(BaseSettings):
 
     # --- providers --------------------------------------------------------
     # "fake" runs the whole pipeline with deterministic local adapters.
-    provider_mode: str = "fake"
+    provider_mode: Literal["fake", "cloud"] = "fake"
+    dashscope_api_key: str = ""
+    llm_provider: str = "dashscope"
     llm_model: str = "qwen-plus"
     llm_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     llm_api_key: str = ""
+    llm_thinking: Literal["disabled", "default"] = "disabled"
     embedding_model: str = "text-embedding-v4"
     embedding_dim: int = 1024
     embedding_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
     embedding_api_key: str = ""
     tts_model: str = "qwen3-tts-flash"
+    tts_provider: Literal["dashscope", "openai", "qwen-native"] = "dashscope"
+    tts_timeout_seconds: float = 120.0
     tts_voice: str = "Cherry"
     tts_language: str = "Chinese"
     tts_base_url: str = "https://dashscope.aliyuncs.com/api/v1"
@@ -84,7 +90,7 @@ class Settings(BaseSettings):
     verify_mode: str = "llm"
     max_audio_revisions: int = 1
     llm_token_budget: int = 24000
-    llm_output_token_cap: int = 3000
+    llm_output_token_cap: int = 6000
     max_tavily_results: int = 3
 
     # --- audio (doc §7) ---------------------------------------------------
@@ -116,11 +122,28 @@ class Settings(BaseSettings):
     seed_demo_user: bool = True
     demo_email: str = "demo@local"
     demo_password: str = "demo12345"
+    bootstrap_email: str = ""
+    bootstrap_password: str = ""
 
     # --- dev conveniences -------------------------------------------------
     # When true the API executes queued runs inline instead of publishing to Celery.
     # Keeps `docker compose` optional for a local demo; production uses the worker.
     inline_worker: bool = False
+
+    @model_validator(mode="after")
+    def configure_providers(self) -> Settings:
+        self.llm_api_key = self.llm_api_key or self.dashscope_api_key
+        self.embedding_api_key = self.embedding_api_key or self.dashscope_api_key
+        if self.tts_provider == "dashscope":
+            self.tts_api_key = self.tts_api_key or self.dashscope_api_key
+        if self.app_env == "production":
+            if self.seed_demo_user:
+                raise ValueError("生产环境必须设置 SEED_DEMO_USER=false")
+            if not self.cookie_secure or not self.public_base_url.startswith("https://"):
+                raise ValueError("生产环境必须使用 HTTPS 和 Secure Cookie")
+            if self.bootstrap_password and len(self.bootstrap_password) < 16:
+                raise ValueError("初始密码至少需要 16 个字符")
+        return self
 
     @property
     def max_episode_seconds(self) -> float:

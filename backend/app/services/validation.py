@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Chunk, Source, SourceVersion
+from app.models import Chunk, ClaimReview, Source, SourceVersion
 from app.schemas.content import Claim, EvidencePack, ScriptDoc
 
 
@@ -85,6 +85,8 @@ async def validate_evidence_pack(
 
 def validate_script_structure(script: ScriptDoc, pack: EvidencePack) -> list[Problem]:
     problems: list[Problem] = []
+    if not any(claim.critical for claim in script.claims):
+        problems.append(Problem("no_critical_claims", "讲稿没有可核验的关键陈述"))
     known = {
         (str(item.source_version_id), str(item.chunk_id), item.span_start, item.span_end)
         for item in pack.items
@@ -99,6 +101,15 @@ def validate_script_structure(script: ScriptDoc, pack: EvidencePack) -> list[Pro
             key = (str(ref.source_version_id), str(ref.chunk_id), ref.span_start, ref.span_end)
             if key not in known:
                 problems.append(Problem("ref_not_in_pack", claim.claim_id))
+            elif not any(
+                item.source_version_id == ref.source_version_id
+                and item.chunk_id == ref.chunk_id
+                and item.span_start == ref.span_start
+                and item.span_end == ref.span_end
+                and item.quote == ref.quote
+                for item in pack.items
+            ):
+                problems.append(Problem("ref_quote_mismatch", claim.claim_id))
         if claim.claim_id not in segment_claim_ids and claim.critical:
             problems.append(Problem("claim_not_spoken", claim.claim_id))
     if not script.spoken_text.strip():
@@ -116,9 +127,9 @@ def merge_review(
     for claim in script.claims:
         verdict = by_id.get(claim.claim_id)
         if verdict is None:
-            updated = claim.model_copy(update={"review": "NOT_FOUND"})
+            updated = claim.model_copy(update={"review": ClaimReview.NOT_FOUND})
         else:
-            updated = claim.model_copy(update={"review": verdict["verdict"]})
+            updated = claim.model_copy(update={"review": ClaimReview(verdict["verdict"])})
         claims.append(updated)
         if claim.critical and updated.review != "SUPPORTED":
             blocking.append(claim.claim_id)

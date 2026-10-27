@@ -1,0 +1,71 @@
+.desktop-body { margin: 0; background: #f7f7f5; color: #252a2b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; font-size: 14px; }
+.desktop-app { min-height: 100vh; --muted: #858b8c; --line: #e4e6e3; --ink: #2d4141; }
+.desktop-app * { box-sizing: border-box; }
+.desktop-app button, .desktop-app input, .desktop-app textarea, .desktop-app select { font: inherit; }
+.desktop-app button { cursor: pointer; border: 0; }
+.desktop-app button:disabled { opacity: .5; cursor: wait; }
+.desktop-app button:focus-visible, .desktop-app a:focus-visible, .desktop-app summary:focus-visible { outline: 2px solid #5c8582; outline-offset: 3px; }
+.desktop-app h1, .desktop-app h2, .desktop-app h3, .desktop-app p { margin: 0; }
+.desktop-header { max-width: 1500px; margin: 0 auto; height: 94px; padding: 0 42px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.desktop-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; font-size: 17px; font-weight: 650; white-space: nowrap; }
+.desktop-brand small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: .12em; margin-top: 3px; }
+.desktop-logo { background: var(--ink); display: flex; align-items: center; justify-content: center; gap: 3px; height: 37px; width: 37px; border-radius: 11px; }
+.desktop-logo i { width: 2px; height: 9px; background: #edf3e9; border-radius: 2px; }
+.desktop-logo i:nth-child(2), .desktop-logo i:nth-child(4) { height: 16px; }.desktop-logo i:nth-child(3) { height: 23px; }
+.desktop-controls { display: flex; align-items: center; gap: 15px; font-size: 12px; }
+.cpa-indicator { background: transparent; color: #687071; padding: 7px 0; }.tts-indicator { color: #687071; white-space: nowrap; }
+.status-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #b9bebb; margin-right: 6px; vertical-align: middle; }
+.status-dot.is-on { background: #4e8873; }.status-dot.is-busy { background: #bd9250; animation: desktop-pulse 1.4s infinite; }
+.desktop-control-divider { width: 1px; height: 16px; background: var(--line); }
+.desktop-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border-radius: 7px; padding: 10px 16px; background: white; border: 1px solid #dce0dc !important; color: #374244; font-weight: 500; }
+.desktop-button.primary { background: var(--ink); color: white; border-color: var(--ink) !important; }.desktop-button.primary:hover { background: #3c5553; }
+.desktop-button.small-button { padding: 7px 11px; font-size: 12px; }
+.desktop-banner { max-width: 1416px; margin: 0 auto 12px; padding: 11px 18px; background: #f3eee1; border-radius: 7px; color: #8a6a31; font-size: 12px; overflow-wrap: anywhere; }
+.desktop-workspace { display: grid; grid-template-columns: minmax(330px, 410px) minmax(0, 1fr); gap: 46px; max-width: 1500px; margin: 0 auto; padding: 20px 42px 60px; }
+.desktop-section-title { height: 38px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+.desktop-section-title h1, .desktop-section-title h2 { font-size: 18px; font-weight: 600; letter-spacing: -.02em; }
+.desktop-section-title h1 span { color: #9ca4a1; font-size: 10px; letter-spacing: .1em; margin-left: 8px; text-transform: uppercase; font-weight: 500; }
+.desktop-muted { font-size: 12px; color: var(--muted); }.desktop-section-title > .desktop-muted { font-size: 11px; }
+.desktop-composer { background: white; border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+.desktop-app input:not([type=checkbox]):not([type=file]), .desktop-app textarea, .desktop-app select { width: 100%; background: #fff; color: #252a2b; border: 1px solid #dce1dc; border-radius: 6px; padding: 9px 11px; outline: none; }
+.desktop-app input:focus, .desktop-app textarea:focus, .desktop-app select:focus { border-color: #859f98; box-shadow: 0 0 0 2px #b7d0c329; }
+.desktop-app textarea { resize: vertical; line-height: 1.8; font-size: 13px; }
+.desktop-app .desktop-title-input { border: 0 !important; padding: 0 0 16px !important; font-size: 14px !important; font-weight: 500; box-shadow: none !important; }
+.desktop-app input::placeholder, .desktop-app textarea::placeholder { color: #a0a6a2; font-weight: 400; }
+.desktop-dropzone { margin-top: 14px; border: 1px dashed #dce1dc; border-radius: 7px; padding: 14px 10px; text-align: center; color: #9ca29e; font-size: 11px; }
+.desktop-dropzone.is-dragging { background: #edf4ee; border-color: #7c9c89; }
+.desktop-dropzone small { display: block; font-size: 10px; margin-top: 7px; color: #929b96; }
+.desktop-attach { color: #566a60; display: inline-flex; gap: 5px; align-items: center; background: transparent; font-size: 12px !important; padding: 0 5px 0 0; }
+.desktop-file-list { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 5px; }
+.desktop-file-list li { display: flex; gap: 8px; align-items: center; font-size: 11px; background: #f5f7f4; border-radius: 4px; padding: 3px 7px; }
+.desktop-file-list li > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }.desktop-file-list small { color: var(--muted); white-space: nowrap; }
+.desktop-icon-button { display: inline-flex; align-items: center; justify-content: center; background: none; color: #7a8581; padding: 5px; border-radius: 5px; }.desktop-icon-button:hover { background: #edf1ec; }
+.desktop-options { margin: 15px 0; font-size: 12px; }.desktop-options summary { color: #858c88; cursor: pointer; }.desktop-options[open] summary { margin-bottom: 13px; }
+.desktop-options label { display: block; font-size: 11px; margin-bottom: 6px; color: #7c857e; }.desktop-options textarea { margin-bottom: 10px; }
+.desktop-options .desktop-inline-field { display: flex; align-items: center; justify-content: space-between; gap: 10px; }.desktop-inline-field select { width: auto; font-size: 12px; }
+.desktop-submit-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 18px; }
+.desktop-check { font-size: 11px; display: inline-flex; align-items: center; gap: 5px; color: #7a8680; white-space: nowrap; }.desktop-check input { accent-color: var(--ink); margin: 0; width: 12px; height: 12px; }
+.desktop-submit-row .desktop-button { font-size: 12px; padding: 9px 12px; gap: 6px; }
+.desktop-list-heading { font-size: 11px; color: #87918a; margin: 26px 0 9px; display: flex; justify-content: space-between; }.desktop-list-heading span { font-size: 10px; }
+.desktop-outbox-list { display: grid; }.desktop-outbox-item { text-align: left; background: transparent; border-bottom: 1px solid var(--line) !important; padding: 15px 3px; }.desktop-outbox-item:hover { background: #f0f2ed; }
+.desktop-outbox-name { display: block; font-size: 13px; color: #45514b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 360px; }.desktop-outbox-meta { display: block; font-size: 10px; color: #929c95; margin-top: 8px; }.desktop-outbox-meta i { font-style: normal; margin: 0 4px; }
+.desktop-no-entries { line-height: 1.9; padding-top: 5px; font-size: 11px; }
+.audio-panel { min-width: 0; padding-left: 42px; border-left: 1px solid var(--line); }
+.desktop-empty { text-align: center; padding: 125px 20px 120px; color: #a0a7a1; }.desktop-empty-waves { margin-bottom: 22px; color: #bdc7bd; font-size: 58px; line-height: 1; }.desktop-empty h3 { font-size: 16px; font-weight: 400; color: #7f8a81; }.desktop-empty p { font-size: 12px; margin-top: 13px; }
+.desktop-group-label { display: flex; gap: 8px; align-items: center; font-size: 11px; color: #8c968d; font-weight: 400; margin: 0 0 12px !important; }.desktop-group-label span { font-size: 10px; }
+.desktop-audio-group + .desktop-audio-group { margin-top: 35px; }
+.desktop-audio-card { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px; margin-bottom: 13px; }.desktop-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.desktop-card-title { font-size: 15px !important; font-weight: 550; color: #35423a; padding: 0; text-align: left; background: none; line-height: 1.6; }.desktop-card-title:hover { color: #5e8a70; }
+.desktop-state-label { flex-shrink: 0; color: #939b8e; font-size: 10px; max-width: 45%; text-align: right; padding-top: 5px; }.desktop-state-label.has-error { color: #b77a67; }
+.desktop-working { font-size: 11px; color: #94a08f; display: flex; align-items: center; gap: 8px; padding-top: 18px; }.desktop-working span { width: 5px; height: 5px; border-radius: 50%; background: #89a28b; animation: desktop-pulse 1.6s infinite; }
+.desktop-progress { margin-top: 20px; display: flex; align-items: center; gap: 12px; }.desktop-progress progress { width: 100%; height: 4px; accent-color: #68856b; }.desktop-progress span { flex-shrink: 0; font-size: 10px; color: #8e998c; }
+.desktop-error { margin-top: 12px !important; font-size: 11px; line-height: 1.8; color: #a26756; overflow-wrap: anywhere; white-space: pre-wrap; }
+.desktop-card-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }.desktop-text-button { background: none; color: #758776; padding: 0; font-size: 11px !important; display: inline-flex; align-items: center; gap: 5px; }.desktop-text-button:hover { color: #334d3b; }.desktop-text-button.subdued { color: #a3aaa0; }
+.desktop-audio-card audio { width: 100%; display: block; height: 38px; margin-top: 17px; }.complete-card .desktop-card-top > .desktop-muted { flex-shrink: 0; padding-top: 4px; font-size: 11px; }
+.desktop-toast { position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 20px; background: #2f4035; color: #f0f3ed; box-shadow: 0 5px 24px #14221822; border-radius: 8px; padding: 12px 15px; font-size: 12px; z-index: 20; max-width: 90vw; }.desktop-toast button { color: #c4d0bd; }
+.desktop-dialog { border: 1px solid var(--line); border-radius: 14px; padding: 0; background: #fff; color: #35423a; width: min(720px, 90vw); max-height: 88vh; box-shadow: 0 15px 90px #172b1933; }.desktop-dialog::backdrop { background: #1d302840; backdrop-filter: blur(3px); }.desktop-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 23px 28px 19px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: #fff; }.desktop-dialog h2 { font-size: 17px; font-weight: 550; }.desktop-dialog-body { padding: 22px 28px 30px; line-height: 1.9; font-size: 13px; }.desktop-dialog-body > p + p { margin-top: 10px; }.desktop-dialog-body section { margin-top: 24px; }.desktop-dialog h3 { font-size: 13px; margin-bottom: 12px; }.desktop-script { white-space: pre-wrap; line-height: 2.2; color: #586355; }.desktop-source { padding: 10px 0; border-bottom: 1px solid var(--line); }.desktop-source summary { cursor: pointer; overflow-wrap: anywhere; }.desktop-source small { color: var(--muted); font-size: 10px; margin-left: 10px; }.desktop-source pre { white-space: pre-wrap; font: inherit; font-size: 11px; background: #f6f8f3; padding: 12px; max-height: 250px; overflow: auto; }.desktop-source a { color: #668064; font-size: 11px; }.desktop-research-log { margin-top: 25px; font-size: 11px; }.desktop-research-log summary { cursor: pointer; color: #7a8b74; }.desktop-research-log ol { padding-left: 18px; }.desktop-research-log li { padding: 4px 0; overflow-wrap: anywhere; }.desktop-research-log time { color: #9aa28f; margin-right: 12px; }.settings-dialog { width: min(510px, 90vw); }.settings-dialog label { display: block; margin: 22px 0 7px; }.settings-dialog select { margin-bottom: 20px; }
+.desktop-app .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+@keyframes desktop-pulse { 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .desktop-app * { animation: none !important; } }
+@media (max-width: 1050px) { .desktop-workspace { gap: 26px; padding: 15px 25px 50px; grid-template-columns: minmax(310px, 355px) minmax(0, 1fr); }.audio-panel { padding-left: 25px; }.desktop-header { padding: 0 25px; }.desktop-audio-card { padding: 17px; }.desktop-card-top { flex-wrap: wrap; }.desktop-state-label { max-width: 100%; padding: 0; } }
+@media (max-width: 760px) { .desktop-header { height: auto; padding: 22px 20px; flex-wrap: wrap; gap: 22px; }.desktop-controls { width: 100%; flex-wrap: wrap; gap: 12px; }.desktop-workspace { display: block; padding: 10px 20px 40px; }.audio-panel { padding: 30px 0 0; border: 0; }.desktop-section-title { margin-bottom: 15px; }.desktop-empty { padding: 55px 10px; }.desktop-banner { margin: 0 20px 10px; }.desktop-dialog-header { padding: 20px; }.desktop-dialog-body { padding: 20px; }.desktop-outbox-name { max-width: 100%; } }

@@ -1,0 +1,27 @@
+FROM python:3.12-slim AS base
+ARG DEBIAN_MIRROR=https://deb.debian.org
+RUN sed -i "s|http://deb.debian.org|${DEBIAN_MIRROR}|g" /etc/apt/sources.list.d/debian.sources
+
+FROM base AS build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc make libc6-dev libopenblas-dev ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+# Context is the reviewed, Git-blob-verified source subset in deploy/.private/verification/native-build.
+COPY native-src/ ./
+RUN make -j2 blas SIMD=portable GIT_REV=ef339be58a778b062e1c14382347964552eae007
+
+FROM base
+RUN apt-get update && apt-get install -y --no-install-recommends libopenblas0-pthread \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/qwen_tts /usr/local/bin/qwen_tts
+COPY --from=build /src/LICENSE /usr/share/doc/qwen-tts/LICENSE
+COPY --from=build /src/third_party/ingot/LICENSE /usr/share/doc/qwen-tts/INGOT-LICENSE
+COPY --from=build /src/vendor/lz4.h /usr/share/doc/qwen-tts/lz4.h
+LABEL org.opencontainers.image.source="https://github.com/gabriele-mastrapasqua/qwen3-tts" \
+      org.opencontainers.image.revision="ef339be58a778b062e1c14382347964552eae007"
+ENV OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+USER 65532:65532
+WORKDIR /tmp
+ENTRYPOINT ["qwen_tts"]
+CMD ["--help"]

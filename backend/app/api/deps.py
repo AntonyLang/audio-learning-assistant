@@ -7,7 +7,7 @@ import json
 import uuid
 from datetime import UTC, datetime
 
-from fastapi import Cookie, Depends, Header, HTTPException, Request, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -23,11 +23,10 @@ async def current_user(
     request: Request,
     session: AsyncSession = Depends(get_session),
     settings: Settings = Depends(get_settings),
-    ala_session: str | None = Cookie(default=None),
 ) -> UserProfile:
     # A browser cookie is the only accepted identity source; the header form exists for
     # the CLI/tests and still resolves to a server-side session row.
-    token = ala_session or request.headers.get("x-session-token")
+    token = request.cookies.get(settings.session_cookie) or request.headers.get("x-session-token")
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="session_required")
     row = await session.execute(
@@ -48,6 +47,7 @@ async def current_user(
         header = request.headers.get("x-csrf-token", "")
         if not header or not constant_time_equals(header, auth_session.csrf_token):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="csrf_failed")
+    request.state.auth_session = auth_session
     return profile
 
 

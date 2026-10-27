@@ -12,6 +12,9 @@ export default function SettingsPage() {
   const [created, setCreated] = useState<string>("");
   const [error, setError] = useState("");
   const [budget, setBudget] = useState(600);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [notice, setNotice] = useState("");
 
   const refresh = useCallback(async () => {
     try {
@@ -51,8 +54,22 @@ export default function SettingsPage() {
     try {
       await api.patchProfile({ daily_budget_ms: Math.round(budget * 1000) });
       setError("");
+      setNotice("每日预算已保存");
     } catch (err) {
       setError(err instanceof ApiError ? err.detail : String(err));
+    }
+  };
+
+  const changePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      await api.changePassword(currentPassword, newPassword);
+      setCurrentPassword("");
+      setNewPassword("");
+      setError("");
+      setNotice("密码已修改，其他设备需要重新登录。");
+    } catch (err) {
+      setError(err instanceof ApiError && err.detail === "current_password_incorrect" ? "当前密码不正确" : "密码修改失败，请稍后重试。");
     }
   };
 
@@ -61,11 +78,19 @@ export default function SettingsPage() {
       <header className="page-head">
         <div>
           <h1>设置与订阅</h1>
-          <p className="muted">私有 RSS 使用可撤销的 token；轮换后节目 GUID 不变。</p>
+          <p className="muted">管理收听预算、账号和播客订阅。</p>
         </div>
       </header>
 
       {error && <div className="error">{error}</div>}
+      {notice && <div role="status">{notice}</div>}
+
+      <form className="card" onSubmit={(event) => void changePassword(event)}>
+        <div className="label">账号安全</div>
+        <label>当前密码<input type="password" autoComplete="current-password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required /></label>
+        <label>新密码（至少 16 位）<input type="password" autoComplete="new-password" minLength={16} maxLength={256} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} required /></label>
+        <button className="ghost" type="submit">修改密码</button>
+      </form>
 
       <section className="card">
         <div className="label">每日预算</div>
@@ -100,7 +125,7 @@ export default function SettingsPage() {
           </div>
         )}
         <p className="muted small">
-          链接只显示一次；数据库只保存 token 的哈希。请勿把完整链接写进日志。
+          链接只显示一次，可添加到手机播客应用。持有链接即可收听，请勿分享；撤销后原链接立即失效。
         </p>
         <div className="list">
           {tokens.map((token) => (

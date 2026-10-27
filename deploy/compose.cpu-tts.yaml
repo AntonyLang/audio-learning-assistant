@@ -1,0 +1,52 @@
+x-time-budget: &time-budget
+  TASK_SOFT_TIME_LIMIT: "7140"
+  TASK_TIME_LIMIT: "7200"
+  VISIBILITY_TIMEOUT: "7500"
+  MAX_SEGMENT_CHARS: "80"
+  TTS_TIMEOUT_SECONDS: "900"
+
+services:
+  api:
+    environment:
+      <<: *time-budget
+      TTS_PROVIDER: qwen-native
+      TTS_BASE_URL: http://tts:8001/v1
+      TTS_MODEL: qwen3-tts-0.6b-customvoice-int8-ef339be5
+      TTS_VOICE: serena
+  worker:
+    environment:
+      <<: *time-budget
+      TTS_PROVIDER: qwen-native
+      TTS_BASE_URL: http://tts:8001/v1
+      TTS_MODEL: qwen3-tts-0.6b-customvoice-int8-ef339be5
+      TTS_VOICE: serena
+    depends_on:
+      tts: {condition: service_healthy}
+  dispatcher:
+    environment:
+      <<: *time-budget
+  scheduler:
+    environment:
+      <<: *time-budget
+  tts:
+    image: ${TTS_IMAGE:?Set the versioned CPU TTS image}
+    command: ["-d", "/models/qwen", "--int8", "-j", "2", "--serve", "8001", "--max-request-seconds", "900", "--max-text-chars", "300"]
+    volumes:
+      - ./models/qwen3-tts-0.6b-customvoice:/models/qwen:ro
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=128m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 3g
+    memswap_limit: 3g
+    cpus: 1.5
+    networks: [data]
+    healthcheck:
+      # The single-request CPU server may be generating for minutes; check its listening socket.
+      test: [CMD, python, -c, "import socket; socket.create_connection(('127.0.0.1', 8001), timeout=3).close()"]
+      interval: 20s
+      timeout: 5s
+      start_period: 180s
+      retries: 6

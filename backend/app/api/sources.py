@@ -35,7 +35,7 @@ router = APIRouter(tags=["sources"])
 class SourceCreate(BaseModel):
     kind: Literal["url", "text", "rss"]
     url: str | None = None
-    text: str | None = None
+    text: str | None = Field(default=None, max_length=500_000)
     title: str = ""
     intent_note: str = Field(default="", max_length=2000)
 

@@ -329,3 +329,41 @@ async def test_partial_source_requires_acknowledgement(client, dispatcher):
     async with SessionFactory() as session:
         episode = await session.get(Episode, uuid.UUID(allowed.json()["episode_id"]))
         assert episode is not None
+
+
+async def test_new_tab_can_restore_csrf_from_authenticated_profile(client):
+    client.headers.pop("x-csrf-token")
+    profile = await client.get("/v1/profile")
+    assert profile.status_code == 200
+    assert profile.headers["cache-control"] == "private, no-store"
+    client.headers["x-csrf-token"] = profile.json()["csrf_token"]
+    saved = await client.patch("/v1/profile", json={"daily_budget_ms": 900_000})
+    assert saved.status_code == 200
+
+
+async def test_password_change_revokes_other_devices(client):
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as other:
+        login = await other.post("/v1/session", json={"email": "demo@local", "password": "demo12345"})
+        assert login.status_code == 200
+        changed = await client.put("/v1/password", json={
+            "current_password": "demo12345", "new_password": "new-long-test-password-2026",
+        })
+        assert changed.status_code == 204
+        assert (await other.get("/v1/profile")).status_code == 401
+        assert (await client.get("/v1/profile")).status_code == 200
+        assert (await other.post("/v1/session", json={"email": "demo@local", "password": "demo12345"})).status_code == 401
+
+
+async def test_playback_seek_position_does_not_count_as_listening(client, dispatcher):
+    episode = await _build_published_episode(client, dispatcher)
+    episode_id = episode["episode_id"]
+    event = {"episode_id": episode_id, "session_id": "device-one", "client_seq": 1,
+             "kind": "progress", "start_ms": 0, "end_ms": 3000}
+    assert (await client.post("/v1/playback-events", json=event)).status_code == 202
+    duplicate = await client.post("/v1/playback-events", json=event)
+    assert duplicate.json()["status"] == "duplicate"
+    event.update(client_seq=2, kind="position", start_ms=10_000, end_ms=10_000)
+    assert (await client.post("/v1/playback-events", json=event)).status_code == 202
+    summary = (await client.get(f"/v1/episodes/{episode_id}/playback")).json()
+    assert summary["listened_ms"] == 3000
+    assert summary["position_ms"] == 10_000
